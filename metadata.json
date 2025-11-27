@@ -1,0 +1,9 @@
+{
+  "name": "黄龙溪调研助手",
+  "description": "基于 Gemini 2.5 和 3.0 构建的全能调研工具，支持实时语音、Veo 视频生成、高级图像编辑与生成、以及深度思考对话。",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

@@ -8,16 +8,15 @@ import { AppMode } from './types';
 const App: React.FC = () => {
   const [mode, setMode] = useState<AppMode>(AppMode.CHAT);
   
-  // In a real environment, this is injected securely. 
-  // We use process.env.API_KEY as requested.
-  const apiKey = process.env.API_KEY || '';
+  // Using the provided key
+  const apiKey = 'AIzaSyBXxnsgHGqLRQvomceR1BqQwWPOk2r-X0I';
 
   if (!apiKey) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 text-white">
-        <div className="text-center p-8 bg-slate-900 rounded-xl border border-red-500/50">
-          <h1 className="text-2xl font-bold mb-2">Configuration Error</h1>
-          <p className="text-slate-400">API Key is missing from the environment.</p>
+      <div className="h-screen w-screen flex items-center justify-center bg-stone-950 text-stone-200">
+        <div className="text-center p-8 bg-stone-900 rounded-xl border border-red-900/50">
+          <h1 className="text-2xl font-bold mb-2">配置错误</h1>
+          <p className="text-stone-500">缺少 API Key。</p>
         </div>
       </div>
     );

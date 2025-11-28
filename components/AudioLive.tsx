@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
-import { Mic, MicOff, Volume2, Play, Square, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Volume2, Play, Square, Loader2, Radio } from 'lucide-react';
 import { createPcmBlob, decodeAudioData } from '../services/audioUtils';
 
 interface AudioLiveProps {
@@ -10,7 +10,7 @@ interface AudioLiveProps {
 export const AudioLive: React.FC<AudioLiveProps> = ({ apiKey }) => {
   // Live State
   const [isLive, setIsLive] = useState(false);
-  const [liveStatus, setLiveStatus] = useState("未连接");
+  const [liveStatus, setLiveStatus] = useState("准备就绪");
   
   // Audio Refs
   const inputContextRef = useRef<AudioContext | null>(null);
@@ -38,11 +38,11 @@ export const AudioLive: React.FC<AudioLiveProps> = ({ apiKey }) => {
      inputContextRef.current = null;
      outputContextRef.current = null;
      setIsLive(false);
-     setLiveStatus("未连接");
+     setLiveStatus("已结束");
   };
 
   const startLiveSession = async () => {
-    setLiveStatus("正在连接...");
+    setLiveStatus("正在建立连接...");
     try {
         const ai = new GoogleGenAI({ apiKey });
         
@@ -57,11 +57,12 @@ export const AudioLive: React.FC<AudioLiveProps> = ({ apiKey }) => {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } }
-                }
+                },
+                systemInstruction: "你是一位专业的人类学田野调查助手，语气温和、客观。请帮助用户记录和梳理他们在黄龙溪古镇的见闻。"
             },
             callbacks: {
                 onopen: () => {
-                    setLiveStatus("通话中");
+                    setLiveStatus("通话中 - 正在记录");
                     setIsLive(true);
                     
                     if (!inputContextRef.current) return;
@@ -100,12 +101,12 @@ export const AudioLive: React.FC<AudioLiveProps> = ({ apiKey }) => {
                      }
                 },
                 onclose: () => {
-                    setLiveStatus("已断开");
+                    setLiveStatus("连接已断开");
                     setIsLive(false);
                 },
                 onerror: (e) => {
                     console.error(e);
-                    setLiveStatus("连接错误");
+                    setLiveStatus("连接发生错误");
                 }
             }
         });
@@ -114,7 +115,7 @@ export const AudioLive: React.FC<AudioLiveProps> = ({ apiKey }) => {
 
     } catch (e: any) {
         console.error(e);
-        setLiveStatus(`错误: ${e.message}`);
+        setLiveStatus(`连接失败: ${e.message}`);
         setIsLive(false);
     }
   };
@@ -157,55 +158,61 @@ export const AudioLive: React.FC<AudioLiveProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 rounded-none md:rounded-lg border-0 md:border border-slate-700 overflow-y-auto p-4 md:p-6 gap-6">
+    <div className="flex flex-col h-full bg-stone-950 rounded-none md:rounded-lg border-0 md:border border-stone-800 overflow-y-auto p-4 md:p-8 gap-8 font-serif">
        {/* LIVE SECTION */}
-       <div className="bg-slate-800 rounded-xl p-6 border border-slate-600 shadow-lg">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Mic className="text-red-500" /> 实时语音 (Live API)
-            </h2>
-            <p className="text-slate-400 mb-6 text-sm md:text-base">与 Gemini 进行即时语音对话，就像打电话一样自然。</p>
+       <div className="bg-[#141210] rounded-sm p-6 border border-stone-800 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Radio size={120} />
+            </div>
             
-            <div className="flex flex-col items-center justify-center p-8 bg-slate-900/50 rounded-full w-40 h-40 md:w-48 md:h-48 mx-auto mb-6 border-4 border-slate-700 transition-all duration-300" 
-                 style={{ borderColor: isLive ? '#ef4444' : '#334155', boxShadow: isLive ? '0 0 30px rgba(239,68,68,0.3)' : 'none' }}>
-                {isLive ? <Mic size={48} className="text-red-500 animate-pulse" /> : <MicOff size={48} className="text-slate-500" />}
-            </div>
-
-            <div className="text-center mb-6">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${isLive ? 'bg-red-900 text-red-100' : 'bg-slate-700 text-slate-300'}`}>
-                    状态: {liveStatus}
-                </span>
-            </div>
-
-            <div className="flex justify-center gap-4">
-                {!isLive ? (
-                    <button onClick={startLiveSession} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 transition shadow-lg shadow-red-500/30">
-                        <Play size={18} /> 开始通话
-                    </button>
-                ) : (
-                    <button onClick={stopLiveSession} className="bg-slate-600 hover:bg-slate-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 transition">
-                        <Square size={18} /> 结束通话
-                    </button>
-                )}
+            <h2 className="text-xl font-bold text-stone-200 mb-2 flex items-center gap-3">
+                <Mic className="text-amber-600" size={24} /> 
+                <span className="tracking-widest">口述历史访谈</span>
+            </h2>
+            <p className="text-stone-500 mb-8 text-sm">与 AI 助手进行实时对话，记录访谈内容或整理思路。</p>
+            
+            <div className="flex flex-col items-center justify-center py-8">
+                 <div className={`w-40 h-40 md:w-48 md:h-48 rounded-full border-[1px] flex items-center justify-center transition-all duration-1000 ${isLive ? 'border-amber-900 bg-amber-900/10 shadow-[0_0_50px_rgba(180,83,9,0.2)]' : 'border-stone-800 bg-stone-900'}`}>
+                    {isLive ? <Mic size={48} className="text-amber-600 animate-pulse" /> : <MicOff size={48} className="text-stone-600" />}
+                 </div>
+                 
+                 <div className="mt-8 flex flex-col items-center gap-4">
+                     <span className={`text-xs tracking-widest uppercase ${isLive ? 'text-amber-500' : 'text-stone-600'}`}>
+                         {liveStatus}
+                     </span>
+                     
+                    {!isLive ? (
+                        <button onClick={startLiveSession} className="bg-stone-200 hover:bg-white text-stone-900 px-8 py-3 rounded-full font-bold flex items-center gap-2 transition tracking-wider">
+                            <Play size={16} fill="currentColor" /> 开始记录
+                        </button>
+                    ) : (
+                        <button onClick={stopLiveSession} className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-8 py-3 rounded-full font-bold flex items-center gap-2 transition border border-stone-700 tracking-wider">
+                            <Square size={16} fill="currentColor" /> 结束记录
+                        </button>
+                    )}
+                 </div>
             </div>
        </div>
 
        {/* TTS SECTION */}
-       <div className="bg-slate-800 rounded-xl p-6 border border-slate-600 flex-1 shadow-lg">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Volume2 className="text-blue-500" /> 语音合成 (TTS)
+       <div className="bg-[#141210] rounded-sm p-6 border border-stone-800">
+            <h2 className="text-xl font-bold text-stone-200 mb-4 flex items-center gap-3">
+                <Volume2 className="text-stone-500" size={24} /> 
+                <span className="tracking-widest">语音回读 (TTS)</span>
             </h2>
              <textarea 
                 value={ttsText}
                 onChange={(e) => setTtsText(e.target.value)}
-                placeholder="输入想让 Gemini 朗读的文字..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 h-32 resize-none mb-4"
+                placeholder="输入文本，将调研笔记转化为语音..."
+                className="w-full bg-stone-900 border border-stone-800 rounded-sm p-4 text-stone-300 focus:outline-none focus:border-stone-600 h-32 resize-none mb-4 font-serif placeholder:text-stone-600"
             />
             <button 
                 onClick={handleTts} 
                 disabled={isTtsLoading || !ttsText}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition disabled:opacity-50 shadow-lg shadow-blue-500/30"
+                className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-6 py-3 rounded-sm font-medium flex items-center gap-2 transition disabled:opacity-50 border border-stone-700"
             >
-                {isTtsLoading ? <Loader2 className="animate-spin" /> : <Volume2 />} 朗读
+                {isTtsLoading ? <Loader2 className="animate-spin text-stone-400" /> : <Volume2 size={18} />} 
+                <span className="tracking-widest">朗读文本</span>
             </button>
        </div>
     </div>

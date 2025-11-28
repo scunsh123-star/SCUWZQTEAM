@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Image as ImageIcon, Video, Wand2, Edit, Check, AlertCircle, Loader2, Download, Save } from 'lucide-react';
+import { Image as ImageIcon, Video, Wand2, Edit, Check, AlertCircle, Loader2, Download, Save, Film } from 'lucide-react';
 import { ImageGenerationConfig } from '../types';
 
 interface VisualStudioProps {
@@ -126,7 +126,7 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
       } else if (aiStudio) {
           const success = await aiStudio.openSelectKey();
           if (!success) {
-            throw new Error("API Key selection cancelled.");
+            throw new Error("请先选择 API Key 以使用视频生成功能。");
           }
       }
 
@@ -145,7 +145,7 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
 
         operation = await ai.models.generateVideos({
             model,
-            prompt: videoPrompt || "Animate this", 
+            prompt: videoPrompt || "Animate this scene naturally", 
             image: {
                 imageBytes: base64,
                 mimeType: videoFile.type === 'image/jpeg' ? 'image/jpeg' : 'image/png'
@@ -182,12 +182,12 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
          const blob = await vidRes.blob();
          setVideoUrl(URL.createObjectURL(blob));
       } else {
-        throw new Error("No video URI returned");
+        throw new Error("生成完成，但未返回视频地址。");
       }
 
     } catch (e: any) {
-        if (e.message.includes("Requested entity was not found")) {
-             setError("API Key issue. Please re-select key.");
+        if (e.message && e.message.includes("Requested entity was not found")) {
+             setError("API Key 验证失败，请重新选择 Key。");
              if((window as any).aistudio) (window as any).aistudio.openSelectKey();
         } else {
              setError(e.message);
@@ -198,59 +198,62 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 rounded-none md:rounded-lg border-0 md:border border-slate-700 overflow-hidden">
+    <div className="flex flex-col h-full bg-stone-950 rounded-none md:rounded-lg border-0 md:border border-stone-800 overflow-hidden font-serif">
       {/* Tabs */}
-      <div className="flex border-b border-slate-700 bg-slate-800 overflow-x-auto">
-        <button onClick={() => setTab('gen')} className={`flex-1 p-3 flex items-center justify-center gap-2 min-w-[100px] whitespace-nowrap ${tab === 'gen' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-            <Wand2 size={18} /> 文生图
+      <div className="flex border-b border-stone-800 bg-[#141210] overflow-x-auto">
+        <button onClick={() => setTab('gen')} className={`flex-1 p-4 flex items-center justify-center gap-2 min-w-[100px] whitespace-nowrap transition-colors text-sm tracking-widest ${tab === 'gen' ? 'text-amber-500 border-b-2 border-amber-600 bg-stone-900' : 'text-stone-500 hover:text-stone-300'}`}>
+            <Wand2 size={16} /> 意境重绘
         </button>
-        <button onClick={() => setTab('edit')} className={`flex-1 p-3 flex items-center justify-center gap-2 min-w-[100px] whitespace-nowrap ${tab === 'edit' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-            <Edit size={18} /> 智能修图
+        <button onClick={() => setTab('edit')} className={`flex-1 p-4 flex items-center justify-center gap-2 min-w-[100px] whitespace-nowrap transition-colors text-sm tracking-widest ${tab === 'edit' ? 'text-amber-500 border-b-2 border-amber-600 bg-stone-900' : 'text-stone-500 hover:text-stone-300'}`}>
+            <Edit size={16} /> 影像修整
         </button>
-        <button onClick={() => setTab('video')} className={`flex-1 p-3 flex items-center justify-center gap-2 min-w-[100px] whitespace-nowrap ${tab === 'video' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-            <Video size={18} /> Veo视频
+        <button onClick={() => setTab('video')} className={`flex-1 p-4 flex items-center justify-center gap-2 min-w-[100px] whitespace-nowrap transition-colors text-sm tracking-widest ${tab === 'video' ? 'text-amber-500 border-b-2 border-amber-600 bg-stone-900' : 'text-stone-500 hover:text-stone-300'}`}>
+            <Film size={16} /> 动态记录
         </button>
       </div>
 
-      <div className="p-4 md:p-6 flex-1 overflow-y-auto">
+      <div className="p-4 md:p-8 flex-1 overflow-y-auto bg-stone-950">
         
         {error && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded-lg mb-4 flex items-center gap-2 text-sm">
+            <div className="bg-red-900/20 border border-red-900/50 text-red-400 p-4 rounded-sm mb-6 flex items-center gap-2 text-sm">
                 <AlertCircle size={18} /> {error}
             </div>
         )}
 
         {/* IMAGE GENERATION */}
         {tab === 'gen' && (
-            <div className="space-y-4 max-w-2xl mx-auto">
-                <textarea 
-                    className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none h-32 resize-none"
-                    placeholder="描述你想要生成的图像 (例如：'黄龙溪古镇的水墨画风格，石板路，老茶馆')..."
-                    value={genPrompt}
-                    onChange={(e) => setGenPrompt(e.target.value)}
-                />
+            <div className="space-y-6 max-w-2xl mx-auto">
+                <div className="relative">
+                    <textarea 
+                        className="w-full bg-stone-900 border border-stone-800 rounded-sm p-4 text-stone-200 focus:border-amber-700 outline-none h-40 resize-none placeholder:text-stone-600 font-serif leading-relaxed"
+                        placeholder="描述你想要重建的历史场景或艺术画面 (例如：'清晨薄雾中的黄龙溪古镇，石板路湿润，两旁是明清风格的木质建筑，水墨画风格')..."
+                        value={genPrompt}
+                        onChange={(e) => setGenPrompt(e.target.value)}
+                    />
+                    <div className="absolute bottom-3 right-3 text-stone-600 text-xs">Gemini 3.0 Pro</div>
+                </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                      <div>
-                        <label className="block text-slate-400 text-sm mb-1">比例</label>
+                        <label className="block text-stone-500 text-xs mb-2 tracking-widest uppercase">画幅比例</label>
                         <select 
                             value={genConfig.aspectRatio}
                             onChange={(e) => setGenConfig({...genConfig, aspectRatio: e.target.value})}
-                            className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
+                            className="w-full bg-stone-900 border border-stone-800 rounded-sm p-2 text-stone-300 focus:border-amber-700 outline-none"
                         >
                             {ASPECT_RATIOS.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                      </div>
                      <div>
-                        <label className="block text-slate-400 text-sm mb-1">画质</label>
+                        <label className="block text-stone-500 text-xs mb-2 tracking-widest uppercase">清晰度</label>
                         <select 
                             value={genConfig.size}
                             onChange={(e) => setGenConfig({...genConfig, size: e.target.value as any})}
-                            className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
+                            className="w-full bg-stone-900 border border-stone-800 rounded-sm p-2 text-stone-300 focus:border-amber-700 outline-none"
                         >
-                            <option value="1K">1K</option>
-                            <option value="2K">2K</option>
-                            <option value="4K">4K</option>
+                            <option value="1K">1K (标准)</option>
+                            <option value="2K">2K (高清)</option>
+                            <option value="4K">4K (超清)</option>
                         </select>
                      </div>
                 </div>
@@ -258,20 +261,22 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
                 <button 
                     onClick={handleGenerateImage}
                     disabled={isLoading || !genPrompt}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-bold text-white transition flex justify-center items-center gap-2 shadow-lg shadow-indigo-500/30"
+                    className="w-full py-4 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-amber-500 rounded-sm font-medium transition flex justify-center items-center gap-2 disabled:opacity-50"
                 >
-                    {isLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} 开始生成
+                    {isLoading ? <Loader2 className="animate-spin text-amber-600" /> : <Wand2 size={18} />} 
+                    <span className="tracking-widest">开始创作</span>
                 </button>
 
                 {generatedImages.length > 0 && (
-                    <div className="grid grid-cols-1 gap-4 mt-6">
+                    <div className="grid grid-cols-1 gap-6 mt-8">
                         {generatedImages.map((src, i) => (
-                            <div key={i} className="relative group">
-                                <img src={src} className="w-full rounded-lg border border-slate-700 shadow-xl" alt="Generated" />
+                            <div key={i} className="relative group p-2 bg-white/5 border border-stone-800 rounded-sm">
+                                <img src={src} className="w-full rounded-sm shadow-2xl" alt="Generated" />
                                 <a 
                                     href={src} 
-                                    download={`huanglongxi_gen_${Date.now()}.png`}
-                                    className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition"
+                                    download={`huanglongxi_sketch_${Date.now()}.png`}
+                                    className="absolute bottom-6 right-6 bg-stone-900/80 hover:bg-stone-800 text-stone-200 p-3 rounded-full backdrop-blur-sm transition border border-stone-700"
+                                    title="保存到设备"
                                 >
                                     <Download size={20} />
                                 </a>
@@ -284,8 +289,8 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
 
         {/* IMAGE EDITING */}
         {tab === 'edit' && (
-            <div className="space-y-4 max-w-2xl mx-auto">
-                 <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 md:p-8 text-center bg-slate-800/50">
+            <div className="space-y-6 max-w-2xl mx-auto">
+                 <div className="border border-dashed border-stone-700 rounded-sm p-8 text-center bg-stone-900 hover:bg-stone-900/80 transition cursor-pointer">
                     <input 
                         type="file" 
                         accept="image/*"
@@ -293,16 +298,16 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
                         className="hidden"
                         id="edit-upload"
                     />
-                    <label htmlFor="edit-upload" className="cursor-pointer flex flex-col items-center">
+                    <label htmlFor="edit-upload" className="cursor-pointer flex flex-col items-center w-full h-full">
                         {editFile ? (
                             <>
-                                <img src={URL.createObjectURL(editFile)} className="h-40 md:h-48 object-contain mb-2 rounded" alt="Preview" />
-                                <span className="text-green-400 text-sm flex items-center gap-1"><Check size={14} /> {editFile.name} 已选择</span>
+                                <img src={URL.createObjectURL(editFile)} className="h-48 object-contain mb-4 rounded-sm border border-stone-800" alt="Preview" />
+                                <span className="text-emerald-500 text-sm flex items-center gap-2"><Check size={14} /> {editFile.name} 已就绪</span>
                             </>
                         ) : (
                             <>
-                                <ImageIcon className="text-slate-400 mb-2" size={48} />
-                                <span className="text-slate-300">点击上传需要修改的图片</span>
+                                <ImageIcon className="text-stone-600 mb-4" size={40} strokeWidth={1} />
+                                <span className="text-stone-400 font-serif">点击上传田野照片</span>
                             </>
                         )}
                     </label>
@@ -310,8 +315,8 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
 
                  <input 
                     type="text"
-                    className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="如何修改? (例如：'添加复古滤镜', '移除背景路人')"
+                    className="w-full bg-stone-900 border border-stone-800 rounded-sm p-4 text-stone-200 focus:border-amber-700 outline-none font-serif placeholder:text-stone-600"
+                    placeholder="修图指令 (例如：'移除背景中的游客', '将天空改为阴天')"
                     value={editPrompt}
                     onChange={(e) => setEditPrompt(e.target.value)}
                  />
@@ -319,19 +324,20 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
                  <button 
                     onClick={handleEditImage}
                     disabled={isLoading || !editFile || !editPrompt}
-                    className="w-full py-3 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-white transition flex justify-center items-center gap-2 shadow-lg shadow-green-500/30"
+                    className="w-full py-4 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-emerald-500 rounded-sm font-medium transition flex justify-center items-center gap-2 disabled:opacity-50"
                 >
-                    {isLoading ? <Loader2 className="animate-spin" /> : <Edit />} 智能修改
+                    {isLoading ? <Loader2 className="animate-spin text-emerald-600" /> : <Edit size={18} />} 
+                    <span className="tracking-widest">执行修改</span>
                 </button>
 
                 {editedImage && (
-                    <div className="mt-6 relative">
-                        <h3 className="text-white mb-2 font-medium">结果:</h3>
-                        <img src={editedImage} className="w-full rounded-lg border border-slate-700 shadow-xl" alt="Edited" />
+                    <div className="mt-8 p-2 bg-white/5 border border-stone-800 rounded-sm relative">
+                        <img src={editedImage} className="w-full rounded-sm shadow-xl" alt="Edited" />
                         <a 
                             href={editedImage} 
                             download={`huanglongxi_edit_${Date.now()}.png`}
-                            className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition"
+                            className="absolute bottom-6 right-6 bg-stone-900/80 hover:bg-stone-800 text-stone-200 p-3 rounded-full backdrop-blur-sm transition border border-stone-700"
+                            title="保存到设备"
                         >
                             <Download size={20} />
                         </a>
@@ -342,13 +348,13 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
 
         {/* VEO VIDEO */}
         {tab === 'video' && (
-            <div className="space-y-4 max-w-2xl mx-auto">
-                 <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg text-sm text-blue-200">
-                    <p className="font-bold mb-1">注意:</p>
-                    <p>Veo 视频生成需要付费 API Key。如果提示，请选择您的 Key。</p>
+            <div className="space-y-6 max-w-2xl mx-auto">
+                 <div className="bg-amber-900/10 border border-amber-900/30 p-4 rounded-sm text-sm text-amber-600/80 flex items-start gap-3">
+                    <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                    <p>Veo 视频生成需消耗较高算力，建议仅用于关键场景复原。请确保已在弹窗中选择了付费 API Key。</p>
                  </div>
 
-                 <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center bg-slate-800/50">
+                 <div className="border border-dashed border-stone-700 rounded-sm p-6 text-center bg-stone-900">
                     <input 
                         type="file" 
                         accept="image/*"
@@ -359,59 +365,60 @@ export const VisualStudio: React.FC<VisualStudioProps> = ({ apiKey }) => {
                      <label htmlFor="video-upload" className="cursor-pointer flex flex-col items-center">
                         {videoFile ? (
                             <>
-                                <img src={URL.createObjectURL(videoFile)} className="h-32 object-contain mb-2 rounded" alt="Preview" />
-                                <span className="text-green-400 text-sm flex items-center gap-1"><Check size={14} /> {videoFile.name} 已选择 (可选)</span>
-                                <button onClick={(e) => { e.preventDefault(); setVideoFile(null); }} className="text-xs text-red-400 mt-1 hover:underline">移除</button>
+                                <img src={URL.createObjectURL(videoFile)} className="h-32 object-contain mb-2 rounded-sm border border-stone-800" alt="Preview" />
+                                <span className="text-emerald-500 text-xs flex items-center gap-1"><Check size={12} /> {videoFile.name} 已选择</span>
+                                <button onClick={(e) => { e.preventDefault(); setVideoFile(null); }} className="text-xs text-stone-500 mt-2 hover:text-stone-300 border-b border-stone-600">清除图片</button>
                             </>
                         ) : (
                             <>
-                                <ImageIcon className="text-slate-400 mb-2" size={32} />
-                                <span className="text-slate-300 text-sm">上传起始图片 (可选，用于图生视频)</span>
+                                <ImageIcon className="text-stone-600 mb-2" size={24} strokeWidth={1} />
+                                <span className="text-stone-500 text-sm font-serif">上传参考图片 (可选)</span>
                             </>
                         )}
                     </label>
                  </div>
 
                  <textarea 
-                    className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none"
-                    placeholder="描述视频内容 (例如：'黄龙溪古镇的日落延时摄影')..."
+                    className="w-full bg-stone-900 border border-stone-800 rounded-sm p-4 text-stone-200 focus:border-amber-700 outline-none h-32 resize-none placeholder:text-stone-600 font-serif"
+                    placeholder="视频脚本描述 (例如：'镜头缓慢推进，展示古镇茶馆内人们喝茶聊天的场景，光影斑驳')..."
                     value={videoPrompt}
                     onChange={(e) => setVideoPrompt(e.target.value)}
                 />
 
-                <div className="flex gap-4">
-                     <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
-                        <input type="radio" name="aspect" value="16:9" checked={videoAspectRatio === '16:9'} onChange={() => setVideoAspectRatio('16:9')} />
-                        16:9 (横屏)
+                <div className="flex gap-6 justify-center">
+                     <label className="flex items-center gap-2 text-stone-400 cursor-pointer hover:text-stone-200 transition">
+                        <input type="radio" name="aspect" value="16:9" checked={videoAspectRatio === '16:9'} onChange={() => setVideoAspectRatio('16:9')} className="accent-amber-600" />
+                        <span className="text-sm">16:9 (横屏)</span>
                      </label>
-                     <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
-                        <input type="radio" name="aspect" value="9:16" checked={videoAspectRatio === '9:16'} onChange={() => setVideoAspectRatio('9:16')} />
-                        9:16 (竖屏)
+                     <label className="flex items-center gap-2 text-stone-400 cursor-pointer hover:text-stone-200 transition">
+                        <input type="radio" name="aspect" value="9:16" checked={videoAspectRatio === '9:16'} onChange={() => setVideoAspectRatio('9:16')} className="accent-amber-600" />
+                        <span className="text-sm">9:16 (竖屏)</span>
                      </label>
                 </div>
 
                  <button 
                     onClick={handleGenerateVideo}
                     disabled={isLoading || (!videoPrompt && !videoFile)}
-                    className="w-full py-3 bg-pink-600 hover:bg-pink-500 rounded-lg font-bold text-white transition flex justify-center items-center gap-2 shadow-lg shadow-pink-500/30"
+                    className="w-full py-4 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-pink-500 rounded-sm font-medium transition flex justify-center items-center gap-2 disabled:opacity-50"
                 >
-                    {isLoading ? <Loader2 className="animate-spin" /> : <Video />} 生成 Veo 视频
+                    {isLoading ? <Loader2 className="animate-spin text-pink-600" /> : <Film size={18} />} 
+                    <span className="tracking-widest">生成动态影像</span>
                 </button>
                 
-                {isLoading && <p className="text-center text-slate-400 text-sm animate-pulse">正在生成视频...这可能需要几分钟。</p>}
+                {isLoading && <p className="text-center text-stone-500 text-xs animate-pulse font-serif mt-2">正在渲染 Veo 视频，这可能需要几分钟...</p>}
 
                 {videoUrl && (
-                    <div className="mt-6 relative">
-                        <video controls autoPlay loop className="w-full rounded-lg border border-slate-700 shadow-xl">
+                    <div className="mt-8 p-2 bg-white/5 border border-stone-800 rounded-sm relative">
+                        <video controls autoPlay loop className="w-full rounded-sm shadow-2xl">
                             <source src={videoUrl} type="video/mp4" />
-                            您的浏览器不支持 video 标签。
+                            不支持播放。
                         </video>
                         <a 
                             href={videoUrl} 
                             download={`huanglongxi_veo_${Date.now()}.mp4`}
-                            className="block text-center bg-indigo-600 text-white mt-3 py-2 rounded-lg font-medium hover:bg-indigo-500"
+                            className="block text-center bg-stone-800 text-stone-200 mt-2 py-3 rounded-sm text-sm border border-stone-700 hover:bg-stone-700 transition"
                         >
-                            下载视频
+                            保存视频到本地
                         </a>
                     </div>
                 )}

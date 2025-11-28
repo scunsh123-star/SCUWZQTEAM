@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Send, MapPin, Search, Brain, Zap, Image as ImageIcon, Mic, Loader2, StopCircle, Feather, Sparkles } from 'lucide-react';
+import { Send, MapPin, Search, Brain, Zap, Image as ImageIcon, Mic, Loader2, StopCircle, Feather, Sparkles, Settings } from 'lucide-react';
 import { ChatMessage, ChatModelType } from '../types';
 import { arrayBufferToBase64 } from '../services/audioUtils';
 
@@ -213,9 +213,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
       
       // Custom Error Message for Quota
       if (err.message && err.message.includes("429")) {
-        errorText = "⚠️ 免费版调用频率超限。请切换到「标准」模式或稍后重试。";
-        // Auto switch to standard to help user
+        errorText = "⚠️ 免费版配额超限。请稍后重试，或在设置中输入付费 Key。";
         setSelectedModel(ChatModelType.STANDARD);
+      }
+      
+      // Custom Error for Leaked/Invalid Key
+      if (err.message && (err.message.includes("403") || err.message.includes("API key not valid"))) {
+        errorText = "⚠️ API Key 无效或已失效（被检测为泄露）。请点击设置，输入新的有效 Key。";
       }
 
       setMessages(prev => [...prev, {

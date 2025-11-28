@@ -11,10 +11,9 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customKey, setCustomKey] = useState<string>('');
   
-  // Default fallback key - Updated as per user request
-  // Note: 'sk-' keys are typically from 3rd party providers. 
-  // If this fails, ensure the environment supports the provider's Base URL if needed.
-  const defaultKey = 'sk-eeO0gYNqO3cGgSFjf8S3n0bdkrSTtAm9IcQwVvo8JHU9ZWD1';
+  // Reverting to the previous safe key format. 
+  // The 'sk-' key provided previously was flagged as leaked and blocked by Google.
+  const defaultKey = 'AIzaSyBXxnsgHGqLRQvomceR1BqQwWPOk2r-X0I';
 
   useEffect(() => {
     const stored = localStorage.getItem('user_api_key');

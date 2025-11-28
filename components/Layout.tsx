@@ -1,14 +1,15 @@
 import React from 'react';
-import { MessageSquare, Image, Mic, ScrollText } from 'lucide-react';
+import { MessageSquare, Image, Mic, ScrollText, Settings } from 'lucide-react';
 import { AppMode } from '../types';
 
 interface LayoutProps {
   currentMode: AppMode;
   setMode: (mode: AppMode) => void;
   children: React.ReactNode;
+  onOpenSettings: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ currentMode, setMode, children }) => {
+export const Layout: React.FC<LayoutProps> = ({ currentMode, setMode, children, onOpenSettings }) => {
   
   const NavItem = ({ mode, icon: Icon, label, mobileOnly = false }: { mode: AppMode, icon: any, label: string, mobileOnly?: boolean }) => (
     <button
@@ -49,14 +50,35 @@ export const Layout: React.FC<LayoutProps> = ({ currentMode, setMode, children }
           <NavItem mode={AppMode.LIVE} icon={Mic} label="口述记录 (语音)" />
         </nav>
 
-        <div className="p-4 text-xs text-stone-700 border-t border-stone-900 flex justify-between items-center">
-           <span>Gemini 3.0 Pro</span>
-           <span className="w-2 h-2 rounded-full bg-amber-900/50"></span>
+        <div className="mt-auto pt-6 border-t border-stone-900 space-y-4">
+             <button 
+                onClick={onOpenSettings}
+                className="w-full flex items-center gap-3 px-4 py-3 text-stone-500 hover:text-stone-300 hover:bg-stone-900 rounded-lg transition text-sm font-serif tracking-widest"
+             >
+                <Settings size={18} /> 设置
+             </button>
+            <div className="px-4 flex justify-between items-center text-xs text-stone-700">
+                <span>Gemini 3.0 Pro</span>
+                <span className="w-2 h-2 rounded-full bg-amber-900/50"></span>
+            </div>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#0c0a09]">
+        {/* Mobile Header */}
+        <div className="md:hidden h-14 border-b border-stone-800 flex items-center justify-between px-4 bg-stone-925 shrink-0">
+            <div className="flex items-center gap-2">
+                 <div className="w-6 h-6 rounded-sm bg-amber-900/20 flex items-center justify-center border border-amber-900/50">
+                    <ScrollText size={12} className="text-amber-600" />
+                 </div>
+                 <span className="font-bold text-stone-200 tracking-widest">黄龙溪调研</span>
+            </div>
+            <button onClick={onOpenSettings} className="text-stone-500 hover:text-stone-300 p-2">
+                <Settings size={20} />
+            </button>
+        </div>
+
         <div className="flex-1 overflow-hidden relative">
             {children}
         </div>

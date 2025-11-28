@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Send, MapPin, Search, Brain, Zap, Image as ImageIcon, Mic, Loader2, StopCircle, Feather } from 'lucide-react';
+import { Send, MapPin, Search, Brain, Zap, Image as ImageIcon, Mic, Loader2, StopCircle, Feather, Sparkles } from 'lucide-react';
 import { ChatMessage, ChatModelType } from '../types';
 import { arrayBufferToBase64 } from '../services/audioUtils';
 
@@ -12,7 +12,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModelType>(ChatModelType.SMART);
+  // CHANGED: Default to STANDARD (Flash 2.5) to avoid Quota Exceeded (429) errors on free tier
+  const [selectedModel, setSelectedModel] = useState<ChatModelType>(ChatModelType.STANDARD);
   const [useSearch, setUseSearch] = useState(false);
   const [useMaps, setUseMaps] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -114,8 +115,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
       const ai = new GoogleGenAI({ apiKey });
       
       let modelName: string = selectedModel;
+      
+      // Map enums to actual strings
       if (selectedModel === ChatModelType.THINKING) {
         modelName = 'gemini-3-pro-preview';
+      } else if (selectedModel === ChatModelType.SMART) {
+        modelName = 'gemini-3-pro-preview';
+      } else if (selectedModel === ChatModelType.STANDARD) {
+        modelName = 'gemini-2.5-flash';
+      } else if (selectedModel === ChatModelType.FAST) {
+        modelName = 'gemini-2.5-flash-lite';
       }
 
       // Logic: If searching or maps, use 2.5 flash as per prompt requirements
@@ -200,10 +209,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
 
     } catch (err: any) {
       console.error(err);
+      let errorText = `Error: ${err.message || '系统繁忙，请重试。'}`;
+      
+      // Custom Error Message for Quota
+      if (err.message && err.message.includes("429")) {
+        errorText = "⚠️ 免费版调用频率超限。请切换到「标准」模式或稍后重试。";
+        // Auto switch to standard to help user
+        setSelectedModel(ChatModelType.STANDARD);
+      }
+
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'model',
-        text: `Error: ${err.message || '系统繁忙，请重试。'}`
+        text: errorText
       }]);
     } finally {
       setIsLoading(false);
@@ -216,6 +234,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
       {/* Header / Config */}
       <div className="p-3 md:p-4 bg-[#141210] border-b border-stone-800 flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+             <button 
+              onClick={() => { setSelectedModel(ChatModelType.STANDARD); setUseSearch(false); setUseMaps(false); }}
+              className={`px-3 py-1.5 rounded-sm text-xs tracking-wider flex items-center gap-2 transition whitespace-nowrap border ${selectedModel === ChatModelType.STANDARD && !useSearch && !useMaps ? 'bg-stone-800 text-emerald-400 border-emerald-900/30' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
+            >
+              <Sparkles size={12} /> 标准 (Flash)
+            </button>
             <button 
               onClick={() => { setSelectedModel(ChatModelType.SMART); setUseSearch(false); setUseMaps(false); }}
               className={`px-3 py-1.5 rounded-sm text-xs tracking-wider flex items-center gap-2 transition whitespace-nowrap border ${selectedModel === ChatModelType.SMART && !useSearch && !useMaps ? 'bg-stone-800 text-amber-500 border-amber-900/30' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
@@ -237,13 +261,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
         </div>
         <div className="flex gap-2 w-full md:w-auto pt-2 md:pt-0 md:border-l border-stone-800 md:pl-4 overflow-x-auto pb-1 md:pb-0">
              <button 
-              onClick={() => { setUseSearch(!useSearch); setUseMaps(false); setSelectedModel(ChatModelType.SMART); }}
+              onClick={() => { setUseSearch(!useSearch); setUseMaps(false); setSelectedModel(ChatModelType.STANDARD); }}
               className={`px-3 py-1.5 rounded-sm text-xs tracking-wider flex items-center gap-2 transition whitespace-nowrap border ${useSearch ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
             >
               <Search size={12} /> 资料库
             </button>
              <button 
-              onClick={() => { setUseMaps(!useMaps); setUseSearch(false); setSelectedModel(ChatModelType.SMART); }}
+              onClick={() => { setUseMaps(!useMaps); setUseSearch(false); setSelectedModel(ChatModelType.STANDARD); }}
               className={`px-3 py-1.5 rounded-sm text-xs tracking-wider flex items-center gap-2 transition whitespace-nowrap border ${useMaps ? 'bg-green-900/20 text-green-400 border-green-900/30' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
             >
               <MapPin size={12} /> 地理志

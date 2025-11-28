@@ -8,6 +8,7 @@ export enum AppMode {
 
 export enum ChatModelType {
   FAST = 'gemini-2.5-flash-lite',
+  STANDARD = 'gemini-2.5-flash',
   SMART = 'gemini-3-pro-preview',
   THINKING = 'gemini-3-pro-preview-thinking', // Internal flag
 }
